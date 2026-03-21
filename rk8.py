@@ -1,5 +1,6 @@
 import numpy as np
 
+### constants for rk8(7) method ###
 _a2 = np.empty(1)
 _a2[0] =  .25
 
@@ -149,6 +150,48 @@ _be = np.zeros(13)
 _be[:-1] = _bh
 _be = _be - _bl
 
+class IntegrationResult:
+    """
+    Container for outputs from the ODE solver.
+
+    Attributes:
+        chi_pc (float): Phase-channel chi-square value.
+        chi2_bolo (float): Bolometric chi-square value.
+        model (np.ndarray): Model-predicted counts.
+        data (np.ndarray): Observed counts.
+        spots (np.ndarray): Spot contributions to the model.
+    """
+
+    __slots__ = ("t", "y", "status", "message", "success")
+    def __init__(t, y, status, message, success):
+        self.t = t
+        self.y = y
+        self.status = status
+        self.message = message
+        self.success = success
+
+
+'''
+  Bunch object with the following fields defined:
+  t : ndarray, shape (n_points,)
+    Time points.
+  y : ndarray, shape (n, n_points)
+    Values of the solution at `t`.
+  status : int
+    Reason for algorithm termination:
+
+      * -1: Integration step failed.
+      *  0: The solver successfully reached the end of `tspan`.
+      *  1: A termination event occurred.
+
+  message : string
+    Human-readable description of the termination reason.
+  success : bool
+    True if the solver reached the interval end or a termination event
+    occurred (``status >= 0``).
+'''
+
+### problem specific stuff.... should be sorted out on startup? ###
 
 _a2 = np.tile(_a2, (4,1)).T
 _a3 = np.tile(_a3, (4,1)).T
@@ -165,6 +208,8 @@ _a13 = np.tile(_a13, (4,1)).T
 _bH = np.tile(_bh, (4,1)).T
 _bL = np.tile(_bl, (4,1)).T
 _bE = np.tile(_be, (4,1)).T
+
+
 
 def dfdt(y):
   y0 = y[0]
@@ -221,70 +266,110 @@ def rk8(x1, dt, dfdt, args=None):
   return out8, EE
 
 
-#solve_ivp ( fun, t_span, y0, args, tol, t_eval)
 
 def solve_custom(fun, t_span, y0, args=None, tol=1e-8, t_eval=None, dtfunc=None):
-  """
-  Calculate models of stellar evolution in AGN disks.
+  """Solve an initial value problem for a system of ODEs.
+
+  This function numerically integrates a system of ordinary differential
+  equations given an initial value::
+
+    dy / dt = f(t, y)
+    y(t0) = y0
+
+  Here t is a 1-D independent variable (time), y(t) is an
+  N-D vector-valued function (state), and an N-D
+  vector-valued function f(t, y) determines the differential equations.
+  The goal is to find y(t) approximately satisfying the differential
+  equations, given an initial value y(t0)=y0.
+
+  Some of the solvers support integration in the complex domain, but note
+  that for stiff ODE solvers, the right-hand side must be
+  complex-differentiable (satisfy Cauchy-Riemann equations [11]_).
+  To solve a problem in the complex domain, pass y0 with a complex data type.
+  Another option always available is to rewrite your problem for real and
+  imaginary parts separately.
 
   Parameters
   ----------
   fun : callable
-    dy/dt (t, y, args)
-  t_span : array-ike
-    an array holding the starting and stopping time for the integration
-  y0 : float or array 
-    the initial condition
-  args : array-like
-    additional arguments to fun
-  tol  : float, optional
-    target integration error
-  dtfunc : callable, optional
-    a function of (t, y, args) that returns a minimum timestep
+    Right-hand side of the system: the time derivative of the state ``y``
+    at time ``t``. The calling signature is ``fun(t, y)``, where ``t`` is a
+    scalar and ``y`` is an ndarray with ``len(y) = len(y0)``. Additional
+    arguments need to be passed if ``args`` is used (see documentation of
+    ``args`` argument). ``fun`` must return an array of the same shape as
+    ``y``. See `vectorized` for more information.
+  t_span : 2-member sequence
+    Interval of integration (t0, tf). The solver starts with t=t0 and
+    integrates until it reaches t=tf. Both t0 and tf must be floats
+    or values interpretable by the float conversion function.
+  y0 : array_like, shape (n,)
+    Initial state. For problems in the complex domain, pass `y0` with a
+    complex data type (even if the initial value is purely real).
+  t_eval : array_like or None, optional
+    Times at which to store the computed solution, must be sorted and lie
+    within `t_span`. If None (default), use points selected by the solver.
+  args : tuple, optional
+    Additional arguments to pass to the user-defined functions.  If given,
+    the additional arguments are passed to all user-defined functions.
+    So if, for example, `fun` has the signature ``fun(t, y, a, b, c)``,
+    then `jac` (if given) and any event functions must have the same
+    signature, and `args` must be a tuple of length 3.
+  tol : float or array_like, optional
+    Absolute error tolerance, used to determine the step size.
 
   Returns
   -------
-  mdot_gain : float
-    The accretion rate onto the star (solar masses / year).
-  mdot_loss : float
-    The mass loss rate from the star in winds (solar masses / year).
-  """
+  Bunch object with the following fields defined:
+  t : ndarray, shape (n_points,)
+    Time points.
+  y : ndarray, shape (n, n_points)
+    Values of the solution at `t`.
+  status : int
+    Reason for algorithm termination:
 
-  if not callable(fun):
-    print("you done goofed")
+      * -1: Integration step failed.
+      *  0: The solver successfully reached the end of `tspan`.
+      *  1: A termination event occurred.
+
+  message : string
+    Human-readable description of the termination reason.
+  success : bool
+    True if the solver reached the interval end or a termination event
+    occurred (``status >= 0``).
+
+  References
+  ----------
+  .. [1] J.H. Verner, "Explicit Runge--Kutta methods with estimates of the
+       Local Truncation Error", SIAM NA 1978, 772-790. 
+
+  if args is not None:
+    # Wrap the user's fun in lambdas to hide the additional
+    # parameters.  Pass in the original fun as a keyword
+    # argument to keep it in the scope of the lambda.
+    try:
+      _ = [*(args)]
+    except TypeError as exp:
+      suggestion_tuple = (
+        "Supplied 'args' cannot be unpacked. Please supply `args`"
+        f" as a tuple (e.g. `args=({args},)`)"
+      )
+      raise TypeError(suggestion_tuple) from exp
+
+    def fun(t, x, fun=fun):
+      return fun(t, x, *args)
 
   if dtfunc is not None:
     dt0 = dtfunc(y0, args=args)
   elif t_eval is not None:
-    dt0 = t_eval[1]-t_eval[0]
+    dt0 = (t_eval[1]-t_eval[0])*0.1
   else:
-    dt0 = (t_span[1]-t_span[1])*0.01  
+    dt0 = (t_span[1]-t_span[1])*0.001  
 
-  ## might need to make this robust....
+  ## might need to make this robust...
   f0, ee = rk8(yn, dt, fun, args=args)
   for i in range(2):
     dt = dt*(terr/np.max(np.abs(ee)))**(1/8)
     f0, ee = rk8(yn, dt, fun, args=args)
-  print(ee, terr)
 
 
 
-## what solve_ivp does...
-if args is not None:
-        # Wrap the user's fun (and jac, if given) in lambdas to hide the
-        # additional parameters.  Pass in the original fun as a keyword
-        # argument to keep it in the scope of the lambda.
-        try:
-            _ = [*(args)]
-        except TypeError as exp:
-            suggestion_tuple = (
-                "Supplied 'args' cannot be unpacked. Please supply `args`"
-                f" as a tuple (e.g. `args=({args},)`)"
-            )
-            raise TypeError(suggestion_tuple) from exp
-
-        def fun(t, x, fun=fun):
-            return fun(t, x, *args)
-        jac = options.get('jac')
-        if callable(jac):
-            options['jac'] = lambda t, x: jac(t, x, *args)
