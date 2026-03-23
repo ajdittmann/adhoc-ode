@@ -1,5 +1,9 @@
-import numpy as np
+#### NOTES ####
+# Add optional bounds (and reduce timestep if exceeded)
+# Add check to see if result is finite (optional, and reduce timestep/redo)
+# make rk8 a separate class, and sort out dimensionality on startup? 
 
+import numpy as np
 ### constants for rk8(7) method ###
 _a2 = np.empty(1)
 _a2[0] =  .25
@@ -150,226 +154,72 @@ _be = np.zeros(13)
 _be[:-1] = _bh
 _be = _be - _bl
 
-class IntegrationResult:
-    """
-    Container for outputs from the ODE solver.
+class Solver:
+  def __init__(self, dydt, Ndim):
+    self.Ndim = Ndim
 
-    Attributes:
-        chi_pc (float): Phase-channel chi-square value.
-        chi2_bolo (float): Bolometric chi-square value.
-        model (np.ndarray): Model-predicted counts.
-        data (np.ndarray): Observed counts.
-        spots (np.ndarray): Spot contributions to the model.
-    """
+    self._A2 = np.tile(_a2, (Ndim,1)).T
+    self._A3 = np.tile(_a3, (Ndim,1)).T
+    self._A4 = np.tile(_a4, (Ndim,1)).T
+    self._A5 = np.tile(_a5, (Ndim,1)).T
+    self._A6 = np.tile(_a6, (Ndim,1)).T
+    self._A7 = np.tile(_a7, (Ndim,1)).T
+    self._A8 = np.tile(_a8, (Ndim,1)).T
+    self._A9 = np.tile(_a9, (Ndim,1)).T
+    self._A10 = np.tile(_a10, (Ndim,1)).T
+    self._A11 = np.tile(_a11, (Ndim,1)).T
+    self._A12 = np.tile(_a12, (Ndim,1)).T
+    self._A13 = np.tile(_a13, (Ndim,1)).T
+    self._BH = np.tile(_bh, (Ndim,1)).T
+    self._BE = np.tile(_be, (Ndim,1)).T
 
-    __slots__ = ("t", "y", "status", "message", "success")
-    def __init__(t, y, status, message, success):
-        self.t = t
-        self.y = y
-        self.status = status
-        self.message = message
-        self.success = success
+    self._dydt = dydt
 
+  def update(self, x1, dt):
+    ks = []
+    ks.append(self._dydt(x1))
+    x2 = x1 + dt*np.sum(np.array(ks)*self._A2, axis=0)
 
-'''
-  Bunch object with the following fields defined:
-  t : ndarray, shape (n_points,)
-    Time points.
-  y : ndarray, shape (n, n_points)
-    Values of the solution at `t`.
-  status : int
-    Reason for algorithm termination:
+    ks.append(self._dydt(x2))
+    x3 = x1 + dt*np.sum(np.array(ks)*self._A3, axis=0)
 
-      * -1: Integration step failed.
-      *  0: The solver successfully reached the end of `tspan`.
-      *  1: A termination event occurred.
+    ks.append(self._dydt(x3))
+    x4 = x1 + dt*np.sum(np.array(ks)*self._A4, axis=0)
 
-  message : string
-    Human-readable description of the termination reason.
-  success : bool
-    True if the solver reached the interval end or a termination event
-    occurred (``status >= 0``).
-'''
+    ks.append(self._dydt(x4))
+    x5 = x1 + dt*np.sum(np.array(ks)*self._A5, axis=0)
 
-### problem specific stuff.... should be sorted out on startup? ###
+    ks.append(self._dydt(x5))
+    x6 = x1 + dt*np.sum(np.array(ks)*self._A6, axis=0)
 
-_a2 = np.tile(_a2, (4,1)).T
-_a3 = np.tile(_a3, (4,1)).T
-_a4 = np.tile(_a4, (4,1)).T
-_a5 = np.tile(_a5, (4,1)).T
-_a6 = np.tile(_a6, (4,1)).T
-_a7 = np.tile(_a7, (4,1)).T
-_a8 = np.tile(_a8, (4,1)).T
-_a9 = np.tile(_a9, (4,1)).T
-_a10 = np.tile(_a10, (4,1)).T
-_a11 = np.tile(_a11, (4,1)).T
-_a12 = np.tile(_a12, (4,1)).T
-_a13 = np.tile(_a13, (4,1)).T
-_bH = np.tile(_bh, (4,1)).T
-_bL = np.tile(_bl, (4,1)).T
-_bE = np.tile(_be, (4,1)).T
+    ks.append(self._dydt(x6))
+    x7 = x1 + dt*np.sum(np.array(ks)*self._A7, axis=0)
 
+    ks.append(self._dydt(x7))
+    x8 = x1 + dt*np.sum(np.array(ks)*self._A8, axis=0)
 
+    ks.append(self._dydt(x8))
+    x9 = x1 + dt*np.sum(np.array(ks)*self._A9, axis=0)
 
-def dfdt(y):
-  y0 = y[0]
-  y1 = y[1]
-  y2 = y[2]
-  y3 = y[3]
+    ks.append(self._dydt(x9))
+    x10 = x1 + dt*np.sum(np.array(ks)*self._A10, axis=0)
 
-  df = np.array([y1, y2, y3, y2*(12*y0*y0 + 8.0)])
-  return df
+    ks.append(self._dydt(x10))
+    x11 = x1 + dt*np.sum(np.array(ks)*self._A11, axis=0)
 
-def rk8(x1, dt, dfdt, args=None):
-  ks = []
-  ks.append(dfdt(x1))
-  x2 = x1 + dt*np.sum(np.array(ks)*_A2, axis=0)
+    ks.append(self._dydt(x11))
+    x12 = x1 + dt*np.sum(np.array(ks)*self._A12, axis=0)
 
-  ks.append(dfdt(x2))
-  x3 = x1 + dt*np.sum(np.array(ks)*_A3, axis=0)
+    ks.append(self._dydt(x12))
 
-  ks.append(dfdt(x3))
-  x4 = x1 + dt*np.sum(np.array(ks)*_A4, axis=0)
+    out8 = x1 + dt*np.sum(np.array(ks)*self._BH, axis=0)
 
-  ks.append(dfdt(x4))
-  x5 = x1 + dt*np.sum(np.array(ks)*_A5, axis=0)
+    x13 = x1 + dt*np.sum(np.array(ks)*self._A13, axis=0)
+    ks.append(self._dydt(x13))
+    EE = dt*np.sum(np.array(ks)*self._BE, axis=0)
 
-  ks.append(dfdt(x5))
-  x6 = x1 + dt*np.sum(np.array(ks)*_A6, axis=0)
+    return out8, EE
 
-  ks.append(dfdt(x6))
-  x7 = x1 + dt*np.sum(np.array(ks)*_A7, axis=0)
-
-  ks.append(dfdt(x7))
-  x8 = x1 + dt*np.sum(np.array(ks)*_A8, axis=0)
-
-  ks.append(dfdt(x8))
-  x9 = x1 + dt*np.sum(np.array(ks)*_A9, axis=0)
-
-  ks.append(dfdt(x9))
-  x10 = x1 + dt*np.sum(np.array(ks)*_A10, axis=0)
-
-  ks.append(dfdt(x10))
-  x11 = x1 + dt*np.sum(np.array(ks)*_A11, axis=0)
-
-  ks.append(dfdt(x11))
-  x12 = x1 + dt*np.sum(np.array(ks)*_A12, axis=0)
-
-  ks.append(dfdt(x12))
-
-  out8 = x1 + dt*np.sum(np.array(ks)*_bH, axis=0)
-
-  x13 = x1 + dt*np.sum(np.array(ks)*_A13, axis=0)
-  ks.append(dfdt(x13))
-  EE = dt*np.sum(np.array(ks)*_bE, axis=0)
-
-  return out8, EE
-
-
-
-def solve_custom(fun, t_span, y0, args=None, tol=1e-8, t_eval=None, dtfunc=None):
-  """Solve an initial value problem for a system of ODEs.
-
-  This function numerically integrates a system of ordinary differential
-  equations given an initial value::
-
-    dy / dt = f(t, y)
-    y(t0) = y0
-
-  Here t is a 1-D independent variable (time), y(t) is an
-  N-D vector-valued function (state), and an N-D
-  vector-valued function f(t, y) determines the differential equations.
-  The goal is to find y(t) approximately satisfying the differential
-  equations, given an initial value y(t0)=y0.
-
-  Some of the solvers support integration in the complex domain, but note
-  that for stiff ODE solvers, the right-hand side must be
-  complex-differentiable (satisfy Cauchy-Riemann equations [11]_).
-  To solve a problem in the complex domain, pass y0 with a complex data type.
-  Another option always available is to rewrite your problem for real and
-  imaginary parts separately.
-
-  Parameters
-  ----------
-  fun : callable
-    Right-hand side of the system: the time derivative of the state ``y``
-    at time ``t``. The calling signature is ``fun(t, y)``, where ``t`` is a
-    scalar and ``y`` is an ndarray with ``len(y) = len(y0)``. Additional
-    arguments need to be passed if ``args`` is used (see documentation of
-    ``args`` argument). ``fun`` must return an array of the same shape as
-    ``y``. See `vectorized` for more information.
-  t_span : 2-member sequence
-    Interval of integration (t0, tf). The solver starts with t=t0 and
-    integrates until it reaches t=tf. Both t0 and tf must be floats
-    or values interpretable by the float conversion function.
-  y0 : array_like, shape (n,)
-    Initial state. For problems in the complex domain, pass `y0` with a
-    complex data type (even if the initial value is purely real).
-  t_eval : array_like or None, optional
-    Times at which to store the computed solution, must be sorted and lie
-    within `t_span`. If None (default), use points selected by the solver.
-  args : tuple, optional
-    Additional arguments to pass to the user-defined functions.  If given,
-    the additional arguments are passed to all user-defined functions.
-    So if, for example, `fun` has the signature ``fun(t, y, a, b, c)``,
-    then `jac` (if given) and any event functions must have the same
-    signature, and `args` must be a tuple of length 3.
-  tol : float or array_like, optional
-    Absolute error tolerance, used to determine the step size.
-
-  Returns
-  -------
-  Bunch object with the following fields defined:
-  t : ndarray, shape (n_points,)
-    Time points.
-  y : ndarray, shape (n, n_points)
-    Values of the solution at `t`.
-  status : int
-    Reason for algorithm termination:
-
-      * -1: Integration step failed.
-      *  0: The solver successfully reached the end of `tspan`.
-      *  1: A termination event occurred.
-
-  message : string
-    Human-readable description of the termination reason.
-  success : bool
-    True if the solver reached the interval end or a termination event
-    occurred (``status >= 0``).
-
-  References
-  ----------
-  .. [1] J.H. Verner, "Explicit Runge--Kutta methods with estimates of the
-       Local Truncation Error", SIAM NA 1978, 772-790. 
-
-  if args is not None:
-    # Wrap the user's fun in lambdas to hide the additional
-    # parameters.  Pass in the original fun as a keyword
-    # argument to keep it in the scope of the lambda.
-    try:
-      _ = [*(args)]
-    except TypeError as exp:
-      suggestion_tuple = (
-        "Supplied 'args' cannot be unpacked. Please supply `args`"
-        f" as a tuple (e.g. `args=({args},)`)"
-      )
-      raise TypeError(suggestion_tuple) from exp
-
-    def fun(t, x, fun=fun):
-      return fun(t, x, *args)
-
-  if dtfunc is not None:
-    dt0 = dtfunc(y0, args=args)
-  elif t_eval is not None:
-    dt0 = (t_eval[1]-t_eval[0])*0.1
-  else:
-    dt0 = (t_span[1]-t_span[1])*0.001  
-
-  ## might need to make this robust...
-  f0, ee = rk8(yn, dt, fun, args=args)
-  for i in range(2):
-    dt = dt*(terr/np.max(np.abs(ee)))**(1/8)
-    f0, ee = rk8(yn, dt, fun, args=args)
 
 
 
