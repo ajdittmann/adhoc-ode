@@ -1,0 +1,6 @@
+#Mac just works
+*.DS_Store
+*__pycache__/
+
+*.egg
+*.egg-info/

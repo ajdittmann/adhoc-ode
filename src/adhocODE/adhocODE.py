@@ -26,7 +26,7 @@ class IntegrationResult:
     self.message = message
     self.success = success
 
-def solve_custom(fun, t_span, y0, args=None, tol=1e-8, t_eval=None, dtfunc=None, method="rk87"):
+def solve_ivp(fun, t_span, y0, args=None, tol=1e-8, t_eval=None, dtfunc=None, method="rk87"):
   """Solve an initial value problem for a system of ODEs.
 
   This function numerically integrates a system of ordinary differential
@@ -147,7 +147,7 @@ def solve_custom(fun, t_span, y0, args=None, tol=1e-8, t_eval=None, dtfunc=None,
 
   ## pick ODE method
   if method == "rk87":
-    import rk8
+    from . import rk8
     solver = rk8.Solver(fun, len(y0) )
 
   ## pick try to pick initial timestep

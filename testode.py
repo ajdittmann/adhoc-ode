@@ -1,5 +1,5 @@
 import numpy as np
-import customODE as code
+import adhocODE as adhoc
 import matplotlib.pyplot as plt
 
 def customDT1(t, y, k=1):
@@ -23,17 +23,17 @@ def dydt(t, y, k=1):
 
 y0 = np.array([0.0, 1.0]).T #, 0.0, 2.0]).T
 
-res = code.solve_custom(dydt, [0,-10], y0, args=[3.0], tol=1e-2, t_eval = np.linspace(0,-10,30), dtfunc=customDT1)
+res = adhoc.solve_ivp(dydt, [0,-10], y0, args=[3.0], tol=1e-2, t_eval = np.linspace(0,-10,30), dtfunc=customDT1)
 plt.plot(res.t, res.y[0,:])
 
 print('first finished')
 
-res = code.solve_custom(dydt, [0,-10], y0, args=[3.0], tol=1e-2, t_eval = np.linspace(0,-10,30), dtfunc=customDT2)
+res = adhoc.solve_ivp(dydt, [0,-10], y0, args=[3.0], tol=1e-2, t_eval = np.linspace(0,-10,30), dtfunc=customDT2)
 plt.plot(res.t, res.y[0,:])
 
 print('second finished')
 
-res = code.solve_custom(dydt, [0,-10], y0, args=[3.0], tol=1e-16, t_eval = np.linspace(0,-10,30), dtfunc=customDT3 )
+res = adhoc.solve_ivp(dydt, [0,-10], y0, args=[3.0], tol=1e-16, t_eval = np.linspace(0,-10,30), dtfunc=customDT3 )
 plt.plot(res.t, res.y[0,:])
 
 plt.show()

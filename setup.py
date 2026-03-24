@@ -26,7 +26,7 @@ else:
 
 vre = re.compile("__version__ = \"(.*?)\"")
 m = rd(os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                    "adhocODE", "__init__.py"))
+                    "src", "adhocODE", "__init__.py"))
 version = vre.findall(m)[0]
 
 setup(
@@ -34,7 +34,7 @@ setup(
     version=version,
     author="Alexander J. Dittmann",
     author_email="dittmann@ias.edu",
-    packages=["adhocODE"],
+    packages=["src/adhocODE"],
     description="An ad hoc ODE solver",
     install_requires=["numpy","numpy"],
 )
