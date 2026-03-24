@@ -3,8 +3,23 @@
 # Add check to see if result is finite (optional, and reduce timestep/redo)
 # make rk8 a separate class, and sort out dimensionality on startup? 
 
+## TODO: add status to solver (finished, failed, retry...)... maybe return status from update()...
+
 import numpy as np
 ### constants for rk8(7) method ###
+_c2 =  .25
+_c3 =  .1128884514435695538057742782152230971129
+_c4 =  .1693326771653543307086614173228346456693
+_c5 =  .424
+_c6 =  .509
+_c7 =  .867
+_c8 =  .15
+_c9 =  .7090680365138684008060140010282474786750
+_c10 =  .32
+_c11 =  .45
+_c12 =  1
+_c13 =  1
+
 _a2 = np.empty(1)
 _a2[0] =  .25
 
@@ -175,51 +190,52 @@ class Solver:
 
     self._dydt = dydt
 
-  def update(self, x1, dt):
+  def update(self, t1, x1, dt):
     ks = []
-    ks.append(self._dydt(x1))
+    ks.append(self._dydt(t1, x1))
     x2 = x1 + dt*np.sum(np.array(ks)*self._A2, axis=0)
 
-    ks.append(self._dydt(x2))
+    ks.append(self._dydt(t1 + _c2*dt, x2))
     x3 = x1 + dt*np.sum(np.array(ks)*self._A3, axis=0)
 
-    ks.append(self._dydt(x3))
+    ks.append(self._dydt(t1 + _c3*dt, x3))
     x4 = x1 + dt*np.sum(np.array(ks)*self._A4, axis=0)
 
-    ks.append(self._dydt(x4))
+    ks.append(self._dydt(t1 + _c4*dt, x4))
     x5 = x1 + dt*np.sum(np.array(ks)*self._A5, axis=0)
 
-    ks.append(self._dydt(x5))
+    ks.append(self._dydt(t1 + _c5*dt, x5))
     x6 = x1 + dt*np.sum(np.array(ks)*self._A6, axis=0)
 
-    ks.append(self._dydt(x6))
+    ks.append(self._dydt(t1 + _c6*dt, x6))
     x7 = x1 + dt*np.sum(np.array(ks)*self._A7, axis=0)
 
-    ks.append(self._dydt(x7))
+    ks.append(self._dydt(t1 + _c7*dt, x7))
     x8 = x1 + dt*np.sum(np.array(ks)*self._A8, axis=0)
 
-    ks.append(self._dydt(x8))
+    ks.append(self._dydt(t1 + _c8*dt, x8))
     x9 = x1 + dt*np.sum(np.array(ks)*self._A9, axis=0)
 
-    ks.append(self._dydt(x9))
+    ks.append(self._dydt(t1 + _c9*dt, x9))
     x10 = x1 + dt*np.sum(np.array(ks)*self._A10, axis=0)
 
-    ks.append(self._dydt(x10))
+    ks.append(self._dydt(t1 + _c10*dt, x10))
     x11 = x1 + dt*np.sum(np.array(ks)*self._A11, axis=0)
 
-    ks.append(self._dydt(x11))
+    ks.append(self._dydt(t1 + _c11*dt, x11))
     x12 = x1 + dt*np.sum(np.array(ks)*self._A12, axis=0)
 
-    ks.append(self._dydt(x12))
+    ks.append(self._dydt(t1 + _c12*dt, x12))
 
     out8 = x1 + dt*np.sum(np.array(ks)*self._BH, axis=0)
 
     x13 = x1 + dt*np.sum(np.array(ks)*self._A13, axis=0)
-    ks.append(self._dydt(x13))
+    ks.append(self._dydt(t1 + _c13*dt, x13))
     EE = dt*np.sum(np.array(ks)*self._BE, axis=0)
 
     return out8, EE
 
-
+  def getDt(self, dt0, EE, target):
+    return dt0*(target/np.max(np.abs(EE)))**(1/8)
 
 
