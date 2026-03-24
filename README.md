@@ -1,1 +1,1 @@
-# ADaptive-timestep High-Order Code for Solving Ordinary Differential Equations (ADHOC-ODE)
+# ADaptive-timestep High-Order Code for solving Ordinary Differential Equations (ADHOC ODE)
