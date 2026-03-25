@@ -1,7 +1,7 @@
 ### ADaptive-timestep High-Order Code for solving Ordinary Differential Equations 
 # ADHOC-ODE 
 
-Scipy's solve_ivp lacks some potentially useful features, like being able to set a custom minimum timestep as a function of state variables. This package provides similar basic ODE-solving functionality, with a few extra tools. This is a simple ad hoc ODE solver written in python, and not intended to be particularly performant. More options and methods are to come, eventually.
+Scipy's solve_ivp lacks some potentially useful features, like being able to set a custom maximum stepsize as a function of state variables. This package provides similar basic ODE-solving functionality, with a few extra tools. This is a simple ad hoc ODE solver written in python, and not intended to be particularly performant. More options and methods are to come, eventually.
 
 ## Installation
 First, clone the repository using ``git clone https://github.com/ajdittmann/adhoc-ode.git``.  
