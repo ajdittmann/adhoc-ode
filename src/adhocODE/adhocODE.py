@@ -147,23 +147,22 @@ def solve_ivp(fun, t_span, y0, args=None, tol=1e-8, t_eval=None, dtfunc=None, me
     solver = rk8.Solver(fun, len(y0) )
 
   ## pick try to pick initial timestep
-  ## might need to make this robust... 
+  ## might need to make this robust...
   if dtfunc is not None:
     dt0 = dtfunc(t0, y0)
+    dt0 *= tdir
   elif t_eval is not None:
     if t_eval[-1] < tf: t_eval = np.append(t_eval, tf)
     dt0 = (t_eval[1]-t_eval[0])*0.1
   else:
-    dt0 = (t_span[1]-t_span[0])*0.001  
+    dt0 = (t_span[1]-t_span[0])*0.001
 
   ## iterate a couple times to try and find a timestep yielding the desired tolerance
   f0, ee = solver.update(t0, y0, dt0)
-  dt = solver.getDt(dt0, ee, tol) 
+  dt = solver.getDt(dt0, ee, tol)
   for i in range(2):
     f0, ee = solver.update(t0, y0, dt)
-    dt = solver.getDt(dt, ee, tol) 
-
-  dt *= tdir
+    dt = solver.getDt(dt, ee, tol)
 
   ts = [t0]
   ys = [y0]
@@ -187,11 +186,11 @@ def solve_ivp(fun, t_span, y0, args=None, tol=1e-8, t_eval=None, dtfunc=None, me
       tnow += dt
       t_eval_i += 1
       ts.append(tnow)
-      ys.append(ynow)      
+      ys.append(ynow)
       if (tnow - tf)*tdir < 0: tnext = t_eval[t_eval_i]
 
     else:
-      ynow, ee = solver.update(tnow, ynow, dt)      
+      ynow, ee = solver.update(tnow, ynow, dt)
       tnow += dt
 
     dt = solver.getDt(dt, ee, tol)
