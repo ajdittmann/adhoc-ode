@@ -5,7 +5,7 @@ Scipy's solve_ivp lacks some potentially useful features, like being able to set
 
 ## Installation
 First, clone the repository using ``git clone https://github.com/ajdittmann/adhoc-ode.git``.  
-Then, install the package using ``pip install -e .`` or ``python setup.py install``. 
+Then, install the package using ``pip install -e .``
 
 ## Usage
 After installation, you can import the module using 
