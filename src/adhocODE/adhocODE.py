@@ -1,7 +1,3 @@
-#### NOTES ####
-# Add optional bounds (and reduce timestep if exceeded)
-# Add check to see if result is finite (optional, and reduce timestep/redo)
-# Add other methods? rk8(7) is good for now... maybe add an implicit, possibly 9th-order Gauss-Radau? 
 import numpy as np
 
 _METHODS = ["rk87"]
