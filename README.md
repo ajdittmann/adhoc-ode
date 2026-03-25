@@ -33,4 +33,4 @@ Here, the optional arguments are
 * add option to check for going out-of bounds or NaNing, and retrying steps under certain conditions
 
 ## References
-[[1]](https://epubs.siam.org/doi/10.1137/0715051) J.H. Verner, SIAM NA 1978, 772-790,	"Explicit Runge-Kutta methods with estimates of the Local Truncation Error" 
+[[1]](https://epubs.siam.org/doi/10.1137/0715051) [[https://www.sfu.ca/~jverner/]](https://www.sfu.ca/~jverner/) J.H. Verner, SIAM NA 1978, 772-790,	"Explicit Runge-Kutta methods with estimates of the Local Truncation Error" 
