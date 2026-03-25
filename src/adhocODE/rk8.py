@@ -6,6 +6,8 @@
 ## TODO: add status to solver (finished, failed, retry...)... maybe return status from update()...
 
 import numpy as np
+_eps = np.finfo(float).eps
+
 ### constants for rk8(7) method ###
 _c2 =  .25
 _c3 =  .1128884514435695538057742782152230971129
@@ -233,7 +235,7 @@ class Solver:
     ks.append(self._dydt(t1 + _c13*dt, x13))
     EE = dt*np.sum(np.array(ks)*self._BE, axis=0)
 
-    return out8, EE
+    return out8, EE/(np.abs(out8) + _eps)
 
   def getDt(self, dt0, EE, target):
     return dt0*(target/np.max(np.abs(EE)))**(1/8)
