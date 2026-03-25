@@ -29,7 +29,7 @@ Here, the optional arguments are
 * ``method`` - *string*, which ODE solver to employ. Currently only the high-order explicit Runge-Kutta method ``"rk87"`` is supported [[1]](#references). 
 
 ## TO DO
-* add other methods, particularly something implicit
+* add other methods, particularly something implicit <!-- https://arxiv.org/pdf/2211.14574 looks promising  -->
 * add option to check for going out-of bounds or NaNing, and retrying steps under certain conditions
 
 ## References
