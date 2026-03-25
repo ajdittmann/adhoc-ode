@@ -14,7 +14,7 @@ import adhocODE as adhoc
 
 sol = adhoc.solve_ivp(fun, t_span, y0)
 ```
-where ``fun`` is a function defined such that  ``dy/dt = f(t, y)``, ``t_span`` is a 2-element tuple with the starting and stopping times for the simulation, and ``y0`` is the initial value of the vector ``y``.
+where ``fun`` is a function defined such that  ``dy/dt = f(t, y)``, ``t_span`` is a 2-element tuple with the starting and stopping times for the calculation, and ``y0`` is the initial value of the vector ``y``.
 
 The full call signature of ``solve_ivp`` is
 ```
