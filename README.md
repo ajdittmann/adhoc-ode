@@ -1,7 +1,7 @@
 ### ADaptive-timestep High-Order Code for solving Ordinary Differential Equations 
-# ADHOC ODE solver
+# ADHOC-ODE 
 
-Scipy's solve_ivp lacks some potentially useful features, like being able to set a custom minimum timestep as a function of state variables. This package provides similar basic ODE-solving functionality, with a few extra tools. It is a simple ad hoc ODE solver, and not intended to be particularly performant. More options and methods are to come, eventually.
+Scipy's solve_ivp lacks some potentially useful features, like being able to set a custom minimum timestep as a function of state variables. This package provides similar basic ODE-solving functionality, with a few extra tools. This is a simple ad hoc ODE solver written in python, and not intended to be particularly performant. More options and methods are to come, eventually.
 
 ## Installation
 First, clone the repository using ``git clone https://github.com/ajdittmann/adhoc-ode.git``.  
@@ -22,12 +22,15 @@ solve_ivp(fun, t_span, y0, args=None, tol=1e-8, t_eval=None, dtfunc=None, method
 ```
 
 Here, the optional arguments are
-* ``args``
-* ``tol``
-* ``t_eval``
-* ``dtfunc``
-* ``method``
+* ``args`` - *tuple*, additional arguments passed to ``fun``
+* ``tol`` - *float*, target (relative) accuracy for ODE solution
+* ``t_eval`` - *array-like* or *None*, times at which to output the approximate ODE solution
+* ``dtfunc`` - *callable*, a function with the same call signature as ``fun`` that returns a maximum timestep
+* ``method`` - *string*, which ODE solver to employ. Currently only ``"rk87"`` is supported [[1]](#references). 
 
 ## TO DO
 * add other methods, particularly something implicit
 * add option to check for going out-of bounds or NaNing, and retrying steps under certain conditions
+
+## References
+[[1]](https://epubs.siam.org/doi/10.1137/0715051) J.H. Verner, SIAM NA 1978, 772-790,	"Explicit Runge-Kutta methods with estimates of the Local Truncation Error" 
