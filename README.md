@@ -26,7 +26,7 @@ Here, the optional arguments are
 * ``tol`` - *float*, target (relative) accuracy for ODE solution
 * ``t_eval`` - *array-like* or *None*, times at which to output the approximate ODE solution
 * ``dtfunc`` - *callable*, a function with the same call signature as ``fun`` that returns a maximum timestep
-* ``method`` - *string*, which ODE solver to employ. Currently only ``"rk87"`` is supported [[1]](#references). 
+* ``method`` - *string*, which ODE solver to employ. Currently only the high-order explicit Runge-Kutta method ``"rk87"`` is supported [[1]](#references). 
 
 ## TO DO
 * add other methods, particularly something implicit
