@@ -1,10 +1,3 @@
-#### NOTES ####
-# Add optional bounds (and reduce timestep if exceeded)
-# Add check to see if result is finite (optional, and reduce timestep/redo)
-# make rk8 a separate class, and sort out dimensionality on startup? 
-
-## TODO: add status to solver (finished, failed, retry...)... maybe return status from update()...
-
 import numpy as np
 _eps = np.finfo(float).eps
 
