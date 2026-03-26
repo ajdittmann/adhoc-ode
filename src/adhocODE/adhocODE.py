@@ -152,7 +152,6 @@ def solve_ivp(fun, t_span, y0, args=None, tol=1e-8, t_eval=None, dtfunc=None, me
     dt0 = dtfunc(t0, y0)
     dt0 *= tdir
   elif t_eval is not None:
-    if t_eval[-1] < tf: t_eval = np.append(t_eval, tf)
     dt0 = (t_eval[1]-t_eval[0])*0.1
   else:
     dt0 = (t_span[1]-t_span[0])*0.001
@@ -166,32 +165,38 @@ def solve_ivp(fun, t_span, y0, args=None, tol=1e-8, t_eval=None, dtfunc=None, me
 
   ts = []
   ys = []
-  if t0==t_eval[0]:
-    ts.append(t0)
-    ys.append(y0)
+  t_eval_i = 0
 
   tnow = t0
   ynow = y0
-  t_eval_i = 0
   if t_eval is None:
     t_eval = np.array([t0, tf])
+    t_eval_i = 1
 
-  if t_eval[t_eval_i] == t0: t_eval_i += 1 #*int(tdir)
+  else:
+    if t0==t_eval[0]:
+      ts.append(t0)
+      ys.append(y0)
+      t_eval_i = 1
+
   tnext = t_eval[t_eval_i]
+  n_eval = len(t_eval)
 
   status = None
   while status is None:
-    #if (tnow + dt > tdir*( tnext - tnow)  ):
     if (tnow + dt - tnext)*tdir >= 0:
       dt = tnext-tnow
 
       ynow, ee = solver.update(tnow, ynow, dt)
+
+      if t_eval_i < n_eval:
+        ts.append(tnow)
+        ys.append(ynow)
+
       tnow += dt
       t_eval_i += 1
-      ts.append(tnow)
-      ys.append(ynow)
-      if (tnow - tf)*tdir < 0: tnext = t_eval[t_eval_i]
-
+      if t_eval_i < n_eval: tnext = t_eval[t_eval_i]
+      else: tnext = tf
     else:
       ynow, ee = solver.update(tnow, ynow, dt)
       tnow += dt
