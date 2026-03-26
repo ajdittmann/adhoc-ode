@@ -164,8 +164,11 @@ def solve_ivp(fun, t_span, y0, args=None, tol=1e-8, t_eval=None, dtfunc=None, me
     f0, ee = solver.update(t0, y0, dt)
     dt = solver.getDt(dt, ee, tol)
 
-  ts = [t0]
-  ys = [y0]
+  ts = []
+  ys = []
+  if t0==t_eval[0]:
+    ts.append(t0)
+    ys.append(y0)
 
   tnow = t0
   ynow = y0
