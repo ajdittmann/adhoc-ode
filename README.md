@@ -18,15 +18,16 @@ where ``fun`` is a function defined such that  ``dy/dt = f(t, y)``, ``t_span`` i
 
 The full call signature of ``solve_ivp`` is
 ```
-solve_ivp(fun, t_span, y0, args=None, tol=1e-8, t_eval=None, dtfunc=None, method="rk87")
+solve_ivp(fun, t_span, y0, args=None, tol=1e-8, t_eval=None, method="rk87", dtfunc=None, dtfunc_args=None)
 ```
 
 Here, the optional arguments are
 * ``args`` - *tuple*, additional arguments passed to ``fun``
 * ``tol`` - *float*, target accuracy for ODE solution
 * ``t_eval`` - *array-like* or *None*, times at which to output the approximate ODE solution
-* ``dtfunc`` - *callable*, a function with the same call signature as ``fun`` that returns a maximum timestep
-* ``method`` - *string*, which ODE solver to employ. Currently only the high-order explicit Runge-Kutta method ``"rk87"`` is supported [[1]](#references). 
+* ``method`` - *string*, which ODE solver to employ. Currently only the high-order explicit Runge-Kutta method ``"rk87"`` is supported [[1]](#references)
+* ``dtfunc`` - *callable*, a function that returns a custom maximum timestep. This should have the same call signature as ``fun``, followed by any additional arguments
+* ``dtfunc_args`` - *tuple*, additional arguments to ``dtfunc`` in addition to any passed using ``args``
 
 ## TO DO
 * add other methods, particularly something implicit <!-- https://arxiv.org/pdf/2211.14574 looks promising  -->

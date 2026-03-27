@@ -22,7 +22,7 @@ class IntegrationResult:
     self.message = message
     self.success = success
 
-def solve_ivp(fun, t_span, y0, args=None, tol=1e-8, t_eval=None, dtfunc=None, method="rk87"):
+def solve_ivp(fun, t_span, y0, args=None, tol=1e-8, t_eval=None, method="rk87", dtfunc=None, dtfunc_args=None):
   """Solve an initial value problem for a system of ODEs.
 
   This function numerically integrates a system of ordinary differential
@@ -71,6 +71,14 @@ def solve_ivp(fun, t_span, y0, args=None, tol=1e-8, t_eval=None, dtfunc=None, me
     signature, and `args` must be a tuple of length 3.
   tol : float or array_like, optional
     Absolute error tolerance, used to determine the step size.
+  method : string, optional
+    Which ODE solver to use. Currently only 'rk87' is supported.
+  dtfunc : callable, optional
+    A function that sets additional upper limits on the timestep. Its
+    call signature should match that of `fun`, followed by additional
+    optional arguments which can be passed using `dtfunc_args`.
+  dtfunc_args : tuple, optional
+    additional arguments for dtfunc, beyond those required by `fun` 
 
   Returns
   -------
@@ -125,8 +133,15 @@ def solve_ivp(fun, t_span, y0, args=None, tol=1e-8, t_eval=None, dtfunc=None, me
       return fun(t, x, *args)
 
     if dtfunc is not None:
+      dt_args = list(args)
+      if dtargs is not None: dt_args += dtfunc_args
       def dtfunc(t, x, dtfunc=dtfunc):
-        return dtfunc(t, x, *args)
+        return dtfunc(t, x, *dt_args)
+
+  if args is None and dtfunc_args is not None:
+    def dtfunc(t, x, dtfunc=dtfunc):
+      return dtfunc(t, x, *dtfunc_args)
+
 
   ## check that t_eval is valid, if provided
   if t_eval is not None:
@@ -188,13 +203,13 @@ def solve_ivp(fun, t_span, y0, args=None, tol=1e-8, t_eval=None, dtfunc=None, me
       dt = tnext-tnow
 
       ynow, ee = solver.update(tnow, ynow, dt)
+      tnow += dt
+      t_eval_i += 1
 
-      if t_eval_i < n_eval:
+      if t_eval_i <= n_eval:
         ts.append(tnow)
         ys.append(ynow)
 
-      tnow += dt
-      t_eval_i += 1
       if t_eval_i < n_eval: tnext = t_eval[t_eval_i]
       else: tnext = tf
     else:
