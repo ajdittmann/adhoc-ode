@@ -30,7 +30,7 @@ class Solver:
 
     return y2, EE
 
-  def getDt(self, dt0, EE, target):
+  def getDt(self, dt0, EE, ynow, target):
     return dt0*(target/np.max(np.abs(EE)))**(1/2)
 
 

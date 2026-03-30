@@ -188,6 +188,7 @@ class Solver:
   def update(self, t1, x1, dt):
     ks = []
     ks.append(self._dydt(t1, x1))
+
     x2 = x1 + dt*np.sum(np.array(ks)*self._A2, axis=0)
 
     ks.append(self._dydt(t1 + _c2*dt, x2))
@@ -230,7 +231,7 @@ class Solver:
 
     return out8, EE #/(np.abs(out8) + _eps)
 
-  def getDt(self, dt0, EE, target):
+  def getDt(self, dt0, EE, ynow, target):
     return dt0*(target/np.max(np.abs(EE)))**(1/8)
 
 
