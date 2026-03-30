@@ -25,7 +25,7 @@ Here, the optional arguments are
 * ``args`` - *tuple*, additional arguments passed to ``fun``
 * ``tol`` - *float*, target accuracy for ODE solution
 * ``t_eval`` - *array-like* or *None*, times at which to output the approximate ODE solution
-* ``method`` - *string*, which ODE solver to employ. Currently only the high-order explicit Runge-Kutta method ``"rk87"`` is supported [[1]](#references)
+* ``method`` - *string*, which ODE solver to employ. Defaults to the high-order explicit Runge-Kutta method ``"rk87"`` [[1]](#references), but the 2nd-order implicit midpoint method ``"imid"`` is also supported
 * ``dtfunc`` - *callable*, a function that returns a custom maximum timestep. This should have the same call signature as ``fun``, followed by any additional arguments
 * ``dtfunc_args`` - *tuple*, additional arguments to ``dtfunc`` in addition to any passed using ``args``
 

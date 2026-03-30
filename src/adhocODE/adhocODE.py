@@ -1,6 +1,6 @@
 import numpy as np
 
-_METHODS = ["rk87"]
+_METHODS = ["rk87", "imid"]
 
 class IntegrationResult:
   """
@@ -108,7 +108,7 @@ def solve_ivp(fun, t_span, y0, args=None, tol=1e-8, t_eval=None, method="rk87", 
 
   ## check that valid ODE method was requested
   if method.lower() not in _METHODS:
-    raise ValueError("method should be one of " + _METHODS)
+    raise ValueError('method should be one of ', _METHODS)
   else:
     method = method.lower()
 
@@ -160,6 +160,9 @@ def solve_ivp(fun, t_span, y0, args=None, tol=1e-8, t_eval=None, method="rk87", 
   if method == "rk87":
     from . import rk8
     solver = rk8.Solver(fun, len(y0) )
+  else:
+    from . import imid
+    solver = imid.Solver(fun, len(y0) )
 
   ## pick try to pick initial timestep
   ## might need to make this robust...
