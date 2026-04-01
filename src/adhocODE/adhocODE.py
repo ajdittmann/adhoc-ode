@@ -1,6 +1,6 @@
 import numpy as np
 
-_METHODS = ["rk87", "imid"]
+_METHODS = ["rk87", "imid", "sdirk96"]
 
 class IntegrationResult:
   """
@@ -134,7 +134,7 @@ def solve_ivp(fun, t_span, y0, args=None, tol=1e-8, t_eval=None, method="rk87", 
 
     if dtfunc is not None:
       dt_args = list(args)
-      if dtargs is not None: dt_args += dtfunc_args
+      if dtfunc_args is not None: dt_args += dtfunc_args
       def dtfunc(t, x, dtfunc=dtfunc):
         return dtfunc(t, x, *dt_args)
 
@@ -160,6 +160,9 @@ def solve_ivp(fun, t_span, y0, args=None, tol=1e-8, t_eval=None, method="rk87", 
   if method == "rk87":
     from . import rk8
     solver = rk8.Solver(fun, len(y0) )
+  elif method == "sdirk96":
+    from . import sdirk96
+    solver = sdirk96.Solver(fun, len(y0) )
   else:
     from . import imid
     solver = imid.Solver(fun, len(y0) )
@@ -176,10 +179,10 @@ def solve_ivp(fun, t_span, y0, args=None, tol=1e-8, t_eval=None, method="rk87", 
 
   ## iterate a couple times to try and find a timestep yielding the desired tolerance
   f0, ee = solver.update(t0, y0, dt0)
-  dt = solver.getDt(dt0, ee, tol)
+  dt = solver.getDt(dt0, ee, f0, tol)
   for i in range(2):
     f0, ee = solver.update(t0, y0, dt)
-    dt = solver.getDt(dt, ee, tol)
+    dt = solver.getDt(dt, ee, f0, tol)
 
   ts = []
   ys = []
@@ -219,14 +222,13 @@ def solve_ivp(fun, t_span, y0, args=None, tol=1e-8, t_eval=None, method="rk87", 
       ynow, ee = solver.update(tnow, ynow, dt)
       tnow += dt
 
-    dt = solver.getDt(dt, ee, tol)
+    dt = solver.getDt(dt, ee, ynow, tol)
     if dtfunc is not None:
       dt = np.min([tdir*dt, dtfunc(tnow, ynow)])
       dt *= tdir
 
     if (tnow*tdir >= tf*tdir): status=0
     if np.isnan(dt): break
-
   ts = np.array(ts)
   ys = np.vstack(ys).T
 

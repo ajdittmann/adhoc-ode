@@ -229,9 +229,9 @@ class Solver:
     ks.append(self._dydt(t1 + _c13*dt, x13))
     EE = dt*np.sum(np.array(ks)*self._BE, axis=0)
 
-    return out8, EE #/(np.abs(out8) + _eps)
+    return out8, EE
 
   def getDt(self, dt0, EE, ynow, target):
-    return dt0*(target/np.max(np.abs(EE)))**(1/8)
-
+    arg = ((target*np.abs(ynow) + target)/(np.abs(EE)+_eps))**2
+    return dt0*np.sqrt(np.min(arg))**(1/8)
 

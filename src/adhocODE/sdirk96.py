@@ -158,9 +158,8 @@ class Solver:
     return y9, EE
 
   def getDt(self, dt0, EE, ynow, target):
-    arg = ((target*np.abs(ynow) + target)/(EE+_eps))**2
-    return dt0*np.sqrt(np.mean(arg))**(1/6)
-
+    arg = ((target*np.abs(ynow) + target)/(np.abs(EE)+_eps))**2
+    return dt0*np.sqrt(np.min(arg))**(1/6)
 
 
 

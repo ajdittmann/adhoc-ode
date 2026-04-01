@@ -26,11 +26,12 @@ class Solver:
     dy1 = self._dydt(t0, x0)
     y2, info, ier, mesg = fsolve(self.imp2, x0 = y1, args=(x0, dy1, t0, dt), full_output=1, xtol=1.e-14)
     
-    EE = dt*(y2-y1)
+    EE = y2-y1
 
     return y2, EE
 
   def getDt(self, dt0, EE, ynow, target):
-    return dt0*(target/np.max(np.abs(EE)))**(1/2)
+    arg = ((target*np.abs(ynow) + target)/(np.abs(EE)+_eps))**2
+    return dt0*np.sqrt(np.min(arg))**(0.5)
 
 
