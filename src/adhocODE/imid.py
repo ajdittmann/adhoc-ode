@@ -30,8 +30,8 @@ class Solver:
 
     return y2, EE
 
-  def getDt(self, dt0, EE, ynow, target):
-    arg = ((target*np.abs(ynow) + target)/(np.abs(EE)+_eps))**2
+  def getDt(self, dt0, EE, ynow, atol, rtol):
+    arg = ((rtol*np.abs(ynow) + atol)/(np.abs(EE)+_eps))**2
     return dt0*np.sqrt(np.min(arg))**(0.5)
 
 

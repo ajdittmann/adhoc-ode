@@ -22,7 +22,7 @@ class IntegrationResult:
     self.message = message
     self.success = success
 
-def solve_ivp(fun, t_span, y0, args=None, tol=1e-8, t_eval=None, method="rk87", dtfunc=None, dtfunc_args=None):
+def solve_ivp(fun, t_span, y0, args=None, atol=1e-8, rtol=1e-8, t_eval=None, method="rk87", dtfunc=None, dtfunc_args=None):
   """Solve an initial value problem for a system of ODEs.
 
   This function numerically integrates a system of ordinary differential
@@ -69,10 +69,12 @@ def solve_ivp(fun, t_span, y0, args=None, tol=1e-8, t_eval=None, method="rk87", 
     So if, for example, `fun` has the signature ``fun(t, y, a, b, c)``,
     then `jac` (if given) and any event functions must have the same
     signature, and `args` must be a tuple of length 3.
-  tol : float or array_like, optional
+  atol : float, optional
     Absolute error tolerance, used to determine the step size.
+  rtol : float, optional
+    Relative error tolerance, used to determine the step size.
   method : string, optional
-    Which ODE solver to use. Currently only 'rk87' is supported.
+    Which ODE solver to use. Options include 'rk87', 'sdir96', and 'imid'
   dtfunc : callable, optional
     A function that sets additional upper limits on the timestep. Its
     call signature should match that of `fun`, followed by additional
@@ -179,10 +181,10 @@ def solve_ivp(fun, t_span, y0, args=None, tol=1e-8, t_eval=None, method="rk87", 
 
   ## iterate a couple times to try and find a timestep yielding the desired tolerance
   f0, ee = solver.update(t0, y0, dt0)
-  dt = solver.getDt(dt0, ee, f0, tol)
+  dt = solver.getDt(dt0, ee, f0, atol, rtol)
   for i in range(2):
     f0, ee = solver.update(t0, y0, dt)
-    dt = solver.getDt(dt, ee, f0, tol)
+    dt = solver.getDt(dt, ee, f0, atol, rtol)
 
   ts = []
   ys = []
@@ -222,7 +224,7 @@ def solve_ivp(fun, t_span, y0, args=None, tol=1e-8, t_eval=None, method="rk87", 
       ynow, ee = solver.update(tnow, ynow, dt)
       tnow += dt
 
-    dt = solver.getDt(dt, ee, ynow, tol)
+    dt = solver.getDt(dt, ee, ynow, atol, rtol)
     if dtfunc is not None:
       dt = np.min([tdir*dt, dtfunc(tnow, ynow)])
       dt *= tdir
