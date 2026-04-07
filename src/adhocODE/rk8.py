@@ -107,7 +107,7 @@ class Solver:
 
     for s, (a, c) in enumerate(zip(_A[1:], _C[1:]), start=1):
         dy = np.dot(KS[:s].T, a[:s]) * dt
-        KS[s] = self._dydt(t + c * dy, y + dy)
+        KS[s] = self._dydt(t + c * dt, y + dy)
 
     ynew = y + dt * np.dot(KS.T, _B)
 
