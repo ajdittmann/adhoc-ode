@@ -70,9 +70,10 @@ _bl[7] =  2.963212522147690e-01
 _bl[8] = -3.488647915249531e-02
 
 class Solver:
-  def __init__(self, dydt, Ndim):
+  def __init__(self, dydt, Ndim, atol):
     self.Ndim = Ndim
     self._dydt = dydt
+    self.tol = np.max([atol*0.1, 10**-14])
 
   def impN(self, yg, y0, dy_part, adt, tn):
     dydtg = self._dydt(tn, yg)
@@ -88,7 +89,7 @@ class Solver:
 
     for s, (a, c) in enumerate(zip(_A[1:], _C[1:]), start=1):
         dy_part = np.dot(KS[:s].T, a[:s]) * dt 
-        yn, info, ierr, mesg = fsolve(self.impN, x0=x0+dy_part, args=(x0, dy_part, dt*a[s].T, c*dt + t0), full_output=1, xtol=1.e-14)
+        yn, info, ierr, mesg = fsolve(self.impN, x0=x0+dy_part, args=(x0, dy_part, dt*a[s].T, c*dt + t0), full_output=1, xtol=self.tol)
         KS[s] = self._dydt(t0 + c * dt, yn)
 
     yL = x0 + dt * np.dot(KS.T, _bl)

@@ -161,13 +161,13 @@ def solve_ivp(fun, t_span, y0, args=None, atol=1e-8, rtol=1e-8, t_eval=None, met
   ## pick ODE method
   if method == "rk87":
     from . import rk8
-    solver = rk8.Solver(fun, len(y0) )
+    solver = rk8.Solver(fun, len(y0))
   elif method == "sdirk96":
     from . import sdirk96
-    solver = sdirk96.Solver(fun, len(y0) )
+    solver = sdirk96.Solver(fun, len(y0), atol)
   else:
     from . import imid
-    solver = imid.Solver(fun, len(y0) )
+    solver = imid.Solver(fun, len(y0), atol)
 
   ## pick try to pick initial timestep
   ## might need to make this robust...
