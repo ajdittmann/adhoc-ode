@@ -252,16 +252,15 @@ def solve_ivp(fun, t_span, y0, args=None, atol=1e-8, rtol=1e-8, t_eval=None, met
           tnow += dt
           step_accepted = True
 
-      #dt = solver.getDt(dt, ee, ynow, atol, rtol)
-      factor = min(MAX_FACTOR, SAFETY*norm)
-      if step_rejected: factor = min(1, factor)
-      dt *= factor
-      if dtfunc is not None:
-        dt = np.min([tdir*dt, dtfunc(tnow, ynow)])
-        dt *= tdir
+    factor = min(MAX_FACTOR, SAFETY*norm)
+    if step_rejected: factor = min(1, factor)
+    dt *= factor
+    if dtfunc is not None:
+      dt = np.min([tdir*dt, dtfunc(tnow, ynow)])
+      dt *= tdir
 
-      if (tnow*tdir >= tf*tdir): status=0
-      if np.isnan(dt): break
+    if (tnow*tdir >= tf*tdir): status=0
+    if np.isnan(dt): break
 
   ts = np.array(ts)
   ys = np.vstack(ys).T
