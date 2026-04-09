@@ -2,6 +2,10 @@ import numpy as np
 
 _METHODS = ["rk87", "imid", "sdirk96"]
 
+SAFETY = 0.9
+MAX_FACTOR = 2.0
+MIN_FACTOR = 0.2
+
 class IntegrationResult:
   """
   Container for outputs from the ODE solver.
@@ -106,6 +110,9 @@ def solve_ivp(fun, t_span, y0, args=None, atol=1e-8, rtol=1e-8, t_eval=None, met
   ----------
   .. [1] J.H. Verner, "Explicit Runge--Kutta methods with estimates of the
        Local Truncation Error", SIAM NA 1978, 772-790. 
+  .. [2] Y. Alamri & D. I. Ketcheson, "Very High-Order A-Stable Stiffly Accurate 
+       Diagonally Implicit Runge-Kutta Methods with Error Estimators"
+       J Sci Comput 100, 84 (2024) 
   """
 
   ## check that valid ODE method was requested
@@ -169,8 +176,6 @@ def solve_ivp(fun, t_span, y0, args=None, atol=1e-8, rtol=1e-8, t_eval=None, met
     from . import imid
     solver = imid.Solver(fun, len(y0), atol)
 
-  ## pick try to pick initial timestep
-  ## might need to make this robust...
   if dtfunc is not None:
     dt0 = dtfunc(t0, y0)
     dt0 *= tdir
@@ -207,30 +212,57 @@ def solve_ivp(fun, t_span, y0, args=None, atol=1e-8, rtol=1e-8, t_eval=None, met
 
   status = None
   while status is None:
-    if (tnow + dt - tnext)*tdir >= 0:
-      dt = tnext-tnow
+    ystart = np.copy(ynow)
+    step_accepted = False
+    step_rejected = False
+    while not step_accepted:
+      if (tnow + dt - tnext)*tdir >= 0:
+        dt = tnext-tnow
 
-      ynow, ee = solver.update(tnow, ynow, dt)
-      tnow += dt
-      t_eval_i += 1
+        ynow, ee = solver.update(tnow, ystart, dt)
+        yarg = np.maximum(np.abs(ynow), np.abs(ystart))
+        norm = solver.getDt(dt, ee, yarg, atol, rtol)
 
-      if t_eval_i <= n_eval:
-        ts.append(tnow)
-        ys.append(ynow)
+        if norm < 1:
+          factor = max(MIN_FACTOR, SAFETY*norm)
+          dt = dt*factor
+          step_rejected = True
+        else:
+          step_accepted = True
+          tnow += dt
+          t_eval_i += 1
 
-      if t_eval_i < n_eval: tnext = t_eval[t_eval_i]
-      else: tnext = tf
-    else:
-      ynow, ee = solver.update(tnow, ynow, dt)
-      tnow += dt
+          if t_eval_i <= n_eval:
+            ts.append(tnow)
+            ys.append(ynow)
 
-    dt = solver.getDt(dt, ee, ynow, atol, rtol)
-    if dtfunc is not None:
-      dt = np.min([tdir*dt, dtfunc(tnow, ynow)])
-      dt *= tdir
+          if t_eval_i < n_eval: tnext = t_eval[t_eval_i]
+          else: tnext = tf
 
-    if (tnow*tdir >= tf*tdir): status=0
-    if np.isnan(dt): break
+      else:
+        ynow, ee = solver.update(tnow, ystart, dt)
+
+        yarg = np.maximum(np.abs(ynow), np.abs(ystart))
+        norm = solver.getDt(dt, ee, yarg, atol, rtol)
+        if norm < 1:
+          factor = max(MIN_FACTOR, SAFETY*norm)
+          dt = dt*factor
+          step_rejected = True
+        else:
+          tnow += dt
+          step_accepted = True
+
+      #dt = solver.getDt(dt, ee, ynow, atol, rtol)
+      factor = min(MAX_FACTOR, SAFETY*norm)
+      if step_rejected: factor = min(1, factor)
+      dt *= factor
+      if dtfunc is not None:
+        dt = np.min([tdir*dt, dtfunc(tnow, ynow)])
+        dt *= tdir
+
+      if (tnow*tdir >= tf*tdir): status=0
+      if np.isnan(dt): break
+
   ts = np.array(ts)
   ys = np.vstack(ys).T
 
