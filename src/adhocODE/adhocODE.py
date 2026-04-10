@@ -164,21 +164,21 @@ def solve_ivp(fun, t_span, y0, args=None, atol=1e-8, rtol=1e-8, t_eval=None, met
     d = np.diff(t_eval)
     if tf > t0 and np.any(d <= 0) or tf < t0 and np.any(d >= 0):
       raise ValueError("Values in `t_eval` are not properly sorted.")
+  ndim = len(y0)
 
   ## pick ODE method
   if method == "rk87":
     from . import rk8
-    solver = rk8.Solver(fun, len(y0))
+    solver = rk8.Solver(fun, ndim)
   elif method == "sdirk96":
     from . import sdirk96
-    solver = sdirk96.Solver(fun, len(y0), atol)
+    solver = sdirk96.Solver(fun, ndim, atol)
   else:
     from . import imid
-    solver = imid.Solver(fun, len(y0), atol)
+    solver = imid.Solver(fun, ndim, atol)
 
   if dtfunc is not None:
-    dt0 = dtfunc(t0, y0)
-    dt0 *= tdir
+    dt0 = tdir*dtfunc(t0, y0)
   elif t_eval is not None:
     dt0 = (t_eval[1]-t_eval[0])*0.1
   else:
@@ -186,10 +186,10 @@ def solve_ivp(fun, t_span, y0, args=None, atol=1e-8, rtol=1e-8, t_eval=None, met
 
   ## iterate a couple times to try and find a timestep yielding the desired tolerance
   f0, ee = solver.update(t0, y0, dt0)
-  dt = solver.getDt(dt0, ee, f0, atol, rtol)
+  dt = dt0*solver.getDtNorm(ee, f0, atol, rtol)
   for i in range(2):
     f0, ee = solver.update(t0, y0, dt)
-    dt = solver.getDt(dt, ee, f0, atol, rtol)
+    dt = dt*solver.getDtNorm(ee, f0, atol, rtol)
 
   ts = []
   ys = []
@@ -216,42 +216,36 @@ def solve_ivp(fun, t_span, y0, args=None, atol=1e-8, rtol=1e-8, t_eval=None, met
     step_accepted = False
     step_rejected = False
     while not step_accepted:
+      save_result = False
       if (tnow + dt - tnext)*tdir >= 0:
         dt = tnext-tnow
+        save_result = True
 
-        ynow, ee = solver.update(tnow, ystart, dt)
-        yarg = np.maximum(np.abs(ynow), np.abs(ystart))
-        norm = solver.getDt(dt, ee, yarg, atol, rtol)
+      ynow, ee = solver.update(tnow, ystart, dt)
+      #yarg = np.maximum(np.abs(ynow), np.abs(ystart))
+      norm = solver.getDtNorm(ee, ystart, atol, rtol)
 
-        if norm < 1:
-          factor = max(MIN_FACTOR, SAFETY*norm)
-          dt = dt*factor
-          step_rejected = True
-        else:
-          step_accepted = True
-          tnow += dt
-          t_eval_i += 1
-
-          if t_eval_i <= n_eval:
-            ts.append(tnow)
-            ys.append(ynow)
-
-          if t_eval_i < n_eval: tnext = t_eval[t_eval_i]
-          else: tnext = tf
-
+      if norm < 1:
+        factor = max(MIN_FACTOR, SAFETY*norm)
+        dt = dt*factor
+        step_rejected = True
+      elif (np.isfinite(norm)==False or (np.sum(np.isfinite(ynow)) < ndim) ):
+        dt = dt*MIN_FACTOR
+        step_rejected = True
       else:
-        ynow, ee = solver.update(tnow, ystart, dt)
+        step_accepted = True
+        tnow += dt
 
-        yarg = np.maximum(np.abs(ynow), np.abs(ystart))
-        norm = solver.getDt(dt, ee, yarg, atol, rtol)
-        if norm < 1:
-          factor = max(MIN_FACTOR, SAFETY*norm)
-          dt = dt*factor
-          step_rejected = True
-        else:
-          tnow += dt
-          step_accepted = True
+      if step_accepted and save_result:
+        t_eval_i += 1
 
+        if t_eval_i <= n_eval:
+          ts.append(tnow)
+          ys.append(ynow)
+
+        if t_eval_i < n_eval: tnext = t_eval[t_eval_i]
+        else: tnext = tf
+    
     factor = min(MAX_FACTOR, SAFETY*norm)
     if step_rejected: factor = min(1, factor)
     dt *= factor

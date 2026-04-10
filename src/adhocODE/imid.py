@@ -31,7 +31,7 @@ class Solver:
 
     return y2, EE
 
-  def getDt(self, dt0, EE, ynow, atol, rtol):
+  def getDtNorm(self, EE, ynow, atol, rtol):
     arg = ((rtol*np.abs(ynow) + atol)/(np.abs(EE)+_eps))**2
     return np.sqrt(np.mean(arg))**(0.5)
 
