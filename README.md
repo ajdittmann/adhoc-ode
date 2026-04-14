@@ -25,7 +25,7 @@ Here, the optional arguments are
 * ``args`` - *tuple*, additional arguments passed to ``fun``
 * ``tol`` - *float*, target accuracy for ODE solution
 * ``t_eval`` - *array-like* or *None*, times at which to output the approximate ODE solution
-* ``method`` - *string*, which ODE solver to employ. Defaults to the high-order explicit Runge-Kutta method ``"rk87"`` [[1]](#references). For stiff problems, the 6th-order L-stable stiffly accurate SDIRK method of [[2]](#references) ``"sdirk96"`` and 2nd-order (symplectic) implicit midpoint method ``"imid"`` are also available.
+* ``method`` - *string*, which ODE solver to employ. Defaults to the high-order explicit Runge-Kutta method ``"rk87"`` [[1]](#references). For stiff problems, the 6th-order L-stable stiffly accurate SDIRK method of [[2]](#references) ``"sdirk96"`` and 6th-order symplectic Gauss-Legendre method ``"gl6"`` are also available.
 * ``dtfunc`` - *callable*, a function that returns a custom maximum timestep. This should have the same call signature as ``fun``, followed by any additional arguments
 * ``dtfunc_args`` - *tuple*, additional arguments to ``dtfunc`` in addition to any passed using ``args``
 

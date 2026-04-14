@@ -1,6 +1,6 @@
 import numpy as np
 
-_METHODS = ["rk87", "imid", "sdirk96"]
+_METHODS = ["rk87", "sdirk96", "gl6"]
 
 SAFETY = 0.9
 MAX_FACTOR = 2.0
@@ -78,7 +78,7 @@ def solve_ivp(fun, t_span, y0, args=None, atol=1e-8, rtol=1e-8, t_eval=None, met
   rtol : float, optional
     Relative error tolerance, used to determine the step size.
   method : string, optional
-    Which ODE solver to use. Options include 'rk87', 'sdir96', and 'imid'
+    Which ODE solver to use. Options include 'rk87', 'sdir96', and 'gl6'
   dtfunc : callable, optional
     A function that sets additional upper limits on the timestep. Its
     call signature should match that of `fun`, followed by additional
@@ -167,15 +167,15 @@ def solve_ivp(fun, t_span, y0, args=None, atol=1e-8, rtol=1e-8, t_eval=None, met
   ndim = len(y0)
 
   ## pick ODE method
-  if method == "rk87":
-    from . import rk8
-    solver = rk8.Solver(fun, ndim)
-  elif method == "sdirk96":
+  if method == "sdirk96":
     from . import sdirk96
     solver = sdirk96.Solver(fun, ndim, atol)
+  elif method == "gl6":
+    from . import gl6
+    solver = gl6.Solver(fun, ndim, atol)
   else:
-    from . import imid
-    solver = imid.Solver(fun, ndim, atol)
+    from . import rk8
+    solver = rk8.Solver(fun, ndim)
 
   if dtfunc is not None:
     dt0 = tdir*dtfunc(t0, y0)
@@ -222,7 +222,6 @@ def solve_ivp(fun, t_span, y0, args=None, atol=1e-8, rtol=1e-8, t_eval=None, met
         save_result = True
 
       ynow, ee = solver.update(tnow, ystart, dt)
-      #yarg = np.maximum(np.abs(ynow), np.abs(ystart))
       norm = solver.getDtNorm(ee, ystart, atol, rtol)
 
       if norm < 1:
@@ -245,7 +244,7 @@ def solve_ivp(fun, t_span, y0, args=None, atol=1e-8, rtol=1e-8, t_eval=None, met
 
         if t_eval_i < n_eval: tnext = t_eval[t_eval_i]
         else: tnext = tf
-    
+
     factor = min(MAX_FACTOR, SAFETY*norm)
     if step_rejected: factor = min(1, factor)
     dt *= factor
