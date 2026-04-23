@@ -78,7 +78,7 @@ def solve_ivp(fun, t_span, y0, args=None, atol=1e-8, rtol=1e-8, t_eval=None, met
   rtol : float, optional
     Relative error tolerance, used to determine the step size.
   method : string, optional
-    Which ODE solver to use. Options include 'rk87', 'sdir96', and 'gl6'
+    Which ODE solver to use. Options include 'rk87', 'sdirk96', and 'gl6'
   dtfunc : callable, optional
     A function that sets additional upper limits on the timestep. Its
     call signature should match that of `fun`, followed by additional
@@ -207,8 +207,10 @@ def solve_ivp(fun, t_span, y0, args=None, atol=1e-8, rtol=1e-8, t_eval=None, met
       ys.append(y0)
       t_eval_i = 1
 
-  tnext = t_eval[t_eval_i]
   n_eval = len(t_eval)
+
+  if n_eval>1: tnext = t_eval[t_eval_i]
+  else: tnext = tf
 
   status = None
   while status is None:
