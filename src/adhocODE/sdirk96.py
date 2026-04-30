@@ -95,11 +95,7 @@ class Solver:
     update = dt * np.dot(KS.T, _A[8,:])
 
     updateL = dt * np.dot(KS.T, _bl)
-    #y9 = yn
-    #EE = (y9-yL)
     EE = (update-updateL)
-
-    #return y9, EE
     return update, EE
 
   def getDtNorm(self, EE, ynow, atol, rtol):
