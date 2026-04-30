@@ -24,7 +24,7 @@ class Solver:
   def __init__(self, dydt, Ndim, atol):
     self.Ndim = Ndim
     self._dydt = dydt
-    self.tol = np.max([atol*0.1, 10**-14])
+    self.tol = np.max([10**-14])
     self.tol1 = 10.0*np.max([atol, 10**-14])
 
   def imp1(self, yg, y0, t0, dt):
