@@ -61,14 +61,18 @@ class Solver:
     df1 = self._dydt(t0 + dt*_CG[1], yarr[self.Ndim:2*self.Ndim])    
     df2 = self._dydt(t0 + dt*_CG[2], yarr[2*self.Ndim:])    
 
-    yout = x0 + dt*(df0*_BG[0] + df1*_BG[1] + df2*_BG[2])
+    #yout = x0 + dt*(df0*_BG[0] + df1*_BG[1] + df2*_BG[2])
+    ## N.B. embedded method is only 2nd order
+    #yerr = x0 + (-df0*2.5 + 8*df1 - 2.5*df2)*dt/3
+    #EE = yout-yerr
 
+
+    update = dt*(df0*_BG[0] + df1*_BG[1] + df2*_BG[2])
     # N.B. embedded method is only 2nd order
-    yerr = x0 + (-df0*2.5 + 8*df1 - 2.5*df2)*dt/3
+    yerr = (-df0*2.5 + 8*df1 - 2.5*df2)*dt/3
+    EE = update-yerr
 
-    EE = yout-yerr
-
-    return yout, EE*dt**3
+    return update, EE*dt**3
 
   def getDtNorm(self, EE, ynow, atol, rtol):
     arg = ((rtol*np.abs(ynow) + atol)/(np.abs(EE)+_eps))**2

@@ -53,14 +53,14 @@ _A[8,3] =  6.351564027920301e-01
 _A[8,4] =  8.117227866417299e-01
 _A[8,5] =  1.107361086915850e-01
 _A[8,6] = -4.953046924144789e-01
-_A[8,7] = -3.199123410078724e-01 
+_A[8,7] = -3.199123410078724e-01
 _A[8,8] =  2.181277819449076e-01
 
 _C = np.sum(_A, axis=1)
 
 _bl = np.empty(9)
 _bl[0] =  0.0
-_bl[1] =  7.366155582789420e-02 
+_bl[1] =  7.366155582789420e-02
 _bl[2] =  1.035273972622287e-01
 _bl[3] =  1.002474819354989e+00
 _bl[4] =  3.613772892500572e-01
@@ -78,7 +78,7 @@ class Solver:
   def impN(self, yg, y0, dy_part, adt, tn):
     dydtg = self._dydt(tn, yg)
     dyg = yg - y0
-    dy = dy_part + adt * dydtg  
+    dy = dy_part + adt * dydtg
     return dy - dyg
 
   def update(self, t0, x0, dt):
@@ -88,15 +88,19 @@ class Solver:
     KS[0] = self._dydt(t0, x0)
 
     for s, (a, c) in enumerate(zip(_A[1:], _C[1:]), start=1):
-        dy_part = np.dot(KS[:s].T, a[:s]) * dt 
+        dy_part = np.dot(KS[:s].T, a[:s]) * dt
         yn, info, ierr, mesg = fsolve(self.impN, x0=x0+dy_part, args=(x0, dy_part, dt*a[s].T, c*dt + t0), full_output=1, xtol=self.tol)
         KS[s] = self._dydt(t0 + c * dt, yn)
 
-    yL = x0 + dt * np.dot(KS.T, _bl)
-    y9 = yn
-    EE = (y9-yL)
-    
-    return y9, EE
+    update = dt * np.dot(KS.T, _A[8,:])
+
+    updateL = dt * np.dot(KS.T, _bl)
+    #y9 = yn
+    #EE = (y9-yL)
+    EE = (update-updateL)
+
+    #return y9, EE
+    return update, EE
 
   def getDtNorm(self, EE, ynow, atol, rtol):
     arg = ((rtol*np.abs(ynow) + atol)/(np.abs(EE)+_eps))**2

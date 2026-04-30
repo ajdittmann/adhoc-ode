@@ -84,7 +84,7 @@ def solve_ivp(fun, t_span, y0, args=None, atol=1e-8, rtol=1e-8, t_eval=None, met
     call signature should match that of `fun`, followed by additional
     optional arguments which can be passed using `dtfunc_args`.
   dtfunc_args : tuple, optional
-    additional arguments for dtfunc, beyond those required by `fun` 
+    additional arguments for dtfunc, beyond those required by `fun`
 
   Returns
   -------
@@ -109,10 +109,10 @@ def solve_ivp(fun, t_span, y0, args=None, atol=1e-8, rtol=1e-8, t_eval=None, met
   References
   ----------
   .. [1] J.H. Verner, "Explicit Runge--Kutta methods with estimates of the
-       Local Truncation Error", SIAM NA 1978, 772-790. 
-  .. [2] Y. Alamri & D. I. Ketcheson, "Very High-Order A-Stable Stiffly Accurate 
+       Local Truncation Error", SIAM NA 1978, 772-790.
+  .. [2] Y. Alamri & D. I. Ketcheson, "Very High-Order A-Stable Stiffly Accurate
        Diagonally Implicit Runge-Kutta Methods with Error Estimators"
-       J Sci Comput 100, 84 (2024) 
+       J Sci Comput 100, 84 (2024)
   """
 
   ## check that valid ODE method was requested
@@ -185,11 +185,16 @@ def solve_ivp(fun, t_span, y0, args=None, atol=1e-8, rtol=1e-8, t_eval=None, met
     dt0 = (t_span[1]-t_span[0])*0.001
 
   ## iterate a couple times to try and find a timestep yielding the desired tolerance
-  f0, ee = solver.update(t0, y0, dt0)
+  dy0, ee = solver.update(t0, y0, dt0)
+  f0 = y0+dy0
   dt = dt0*solver.getDtNorm(ee, f0, atol, rtol)
   for i in range(2):
-    f0, ee = solver.update(t0, y0, dt)
+    dy0, ee = solver.update(t0, y0, dt)
+    f0 = y0+dy0
     dt = dt*solver.getDtNorm(ee, f0, atol, rtol)
+  if dtfunc is not None:
+    dt = np.min([tdir*dt, dtfunc(t0, y0)])
+    dt *= tdir
 
   ts = []
   ys = []
@@ -213,6 +218,8 @@ def solve_ivp(fun, t_span, y0, args=None, atol=1e-8, rtol=1e-8, t_eval=None, met
   else: tnext = tf
 
   status = None
+  compensation = np.zeros(ndim)
+
   while status is None:
     ystart = np.copy(ynow)
     step_accepted = False
@@ -223,7 +230,7 @@ def solve_ivp(fun, t_span, y0, args=None, atol=1e-8, rtol=1e-8, t_eval=None, met
         dt = tnext-tnow
         save_result = True
 
-      ynow, ee = solver.update(tnow, ystart, dt)
+      update, ee = solver.update(tnow, ystart, dt)
       norm = solver.getDtNorm(ee, ystart, atol, rtol)
 
       if norm < 1:
@@ -236,6 +243,11 @@ def solve_ivp(fun, t_span, y0, args=None, atol=1e-8, rtol=1e-8, t_eval=None, met
       else:
         step_accepted = True
         tnow += dt
+
+        yksum = update - compensation
+        tksum = ystart + yksum
+        compensation = (tksum - ystart) - yksum
+        ynow = tksum
 
       if step_accepted and save_result:
         t_eval_i += 1
