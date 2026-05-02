@@ -30,7 +30,7 @@ Here, the optional arguments are
 * ``dtfunc_args`` - *tuple*, additional arguments to ``dtfunc`` in addition to any passed using ``args``
 
 ## References
-[[1]](https://epubs.siam.org/doi/10.1137/0715051) [[https://www.sfu.ca/~jverner/]](https://www.sfu.ca/~jverner/) J.H. Verner, SIAM NA 1978, 772-790,	"Explicit Runge-Kutta methods with estimates of the Local Truncation Error"
+[[1]](https://epubs.siam.org/doi/10.1137/0715051) [[https://www.sfu.ca/~jverner/]](https://www.sfu.ca/~jverner/) J.H. Verner, SIAM NA 1978, 772-790,	"Explicit Runge-Kutta methods with estimates of the Local Truncation Error" - ``"rk87"`` is an implementation of the "more robust" Runge-Kutta (8)7 pair.
 </br>
 [[2]](https://link.springer.com/article/10.1007/s10915-024-02627-w) [[https://arxiv.org/abs/2211.14574]](https://arxiv.org/abs/2211.14574)
 Y. Alamri & D. I. Ketcheson, J Sci Comput 100, 84 (2024) "Very High-Order A-Stable Stiffly Accurate Diagonally Implicit Runge-Kutta Methods with Error Estimators"
